@@ -45,7 +45,6 @@ object Server {
     var port = 8080
     var jettyServer = new JettyServer(port)
     var context = new JettyContext(jettyServer, "/", true, false)
-
     context.addServlet(sh, "/*")
     jettyServer.start();
 
@@ -68,28 +67,20 @@ class FreemarkerTemplateProvider extends TemplateProcessor {
 
   def resolve(path:String):String = {
     // accept both '/path/to/template' and '/path/to/template.ftl'
-    if (path.endsWith(default_ext)) {
-      path
-    }
-    else {
-      path + default_ext
-    }
+    if (path.endsWith(default_ext)) path else path + default_ext
   }
 
   override def writeTo(resolvedPath:String, model:Any, out:OutputStream) = {
     out.flush // send status + headers
 
-    var template = freemarkerConfig.getTemplate(resolvedPath)
     var vars = new HashMap[String, Any]()
 
-    if (model.isInstanceOf[Map[String, Any]]) {
-      vars.putAll(model.asInstanceOf[Map[String, Any]])
-    }
-    else {
-      vars.put("it", model)
+    model match {
+      case m:Map[String, _] => vars.putAll(m)
+      case _ => vars.put("it", model)
     }
 
-    template.process(vars, new OutputStreamWriter(out))
+    freemarkerConfig.getTemplate(resolvedPath).process(vars, new OutputStreamWriter(out))
   }
 
   @Context
@@ -104,49 +95,18 @@ class FreemarkerTemplateProvider extends TemplateProcessor {
   }
 }
 
+/**
+ * Custom object wrapper for making scala object and collections freemarker-compatible
+ */
 class ScalaBeansWrapper extends SimpleObjectWrapper {
-  override def wrap(obj: Object): TemplateModel = {
+  override def wrap(obj:Object):TemplateModel = {
     obj match {
-      case scol: scala.Collection[_] => super.wrap(scol.asJava)
-      case sobj: ScalaObject => new ScalaHashModel(this, sobj)
+      case scol:scala.Collection[_] => super.wrap(scol.asJava)
+      case sobj:ScalaObject => new TemplateHashModel() {
+        def get(key:String):TemplateModel = wrap(sobj.getClass.getMethod(key).invoke(sobj))
+        def isEmpty = false
+      }
       case _ => super.wrap(obj)
     }
   }
-}
-
-/** A model that will expose all Scala getters that has zero parameters
- * to the FM Hash#get method so can retrieve it without calling with parenthesis.
-
- This stuff is still kinda magic to me... -TJ */
-class ScalaHashModel(wrapper: ObjectWrapper, sobj: ScalaObject) extends TemplateHashModel {
-  type Getter = () => AnyRef
-
-  val gettersCache = new mutable.HashMap[Class[_], mutable.HashMap[String, Getter]]
-
-  val getters = {
-    val cls = sobj.getClass
-    gettersCache.synchronized{
-      gettersCache.get(cls) match {
-        case Some(cachedGetters) => cachedGetters
-        case None =>{
-          val map = new mutable.HashMap[String, Getter]
-          cls.getMethods.foreach { m =>
-            val n = m.getName
-            if(!n.endsWith("_$eq") && m.getParameterTypes.length==0){
-              map += Pair(n, (() => m.invoke(sobj, Array[AnyRef]():_*)))
-            }
-          }
-          gettersCache.put(cls, map)
-          map
-        }
-      }
-    }
-  }
-
-  def get(key: String) : TemplateModel = getters.get(key) match {
-    case Some(getter) => wrapper.wrap(getter())
-    case None => throw new TemplateModelException(key+" not found in object "+sobj)
-  }
-
-  def isEmpty = false
 }

@@ -54,5 +54,4 @@ class Forum extends Serializable {
 
   def name:String = thename
   def name_=(str:String) = thename = str
-
 }

@@ -27,11 +27,10 @@ object Server {
     sh.setInitParameter(ServletContainer.RESOURCE_CONFIG_CLASS,
                         classOf[ClassNamesResourceConfig].getName)
 
-    var classNames = List[String](
-       classOf[ForumIndex].getName, classOf[Forum].getName, classOf[Thread].getName,
-       classOf[FreemarkerTemplateProvider].getName)
-    sh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES,
-                        classNames.reduceLeft {(a,b) => a + ";" + b} )
+    var classNames = new StringBuilder(classOf[FreemarkerTemplateProvider].getName)
+    ForumMeta.resourceClasses.foreach{ cls => classNames.append(";" + cls.getName) }
+    println("classNames = " + classNames)
+    sh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames.toString )
 
     var port = 8080
     var jettyServer = new JettyServer(port)

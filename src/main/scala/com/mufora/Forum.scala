@@ -6,6 +6,12 @@ import javax.ws.rs.{Path, GET, PathParam}
 import com.sun.jersey.api.view.Viewable
 import java.util.{List => JList, ArrayList}
 
+// this is a little ugly but still better than spreading this out over multiple files
+object ForumMeta {
+  val resourceClasses = List(classOf[ForumIndex], classOf[Forum], classOf[Thread])
+  val entityClasses = List(classOf[Forum], classOf[Thread], classOf[Post])
+}
+
 @Path("/")
 class ForumIndex {
   @GET

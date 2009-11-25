@@ -4,15 +4,15 @@ import org.hibernate.cfg.AnnotationConfiguration
 import java.util.{List => JavaList}
 
 object Database {
-  var sessionFactory = new AnnotationConfiguration()
-                        .setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
-                        .setProperty("hibernate.connection.url", "jdbc:h2:mem:")
-                        .setProperty("hibernate.hbm2ddl.auto", "create")
-                        .setProperty("hibernate.current_session_context_class", "thread")
-                        .addAnnotatedClass(classOf[Forum])
-                        .addAnnotatedClass(classOf[Thread])
-                        .addAnnotatedClass(classOf[Post])
-                        .buildSessionFactory
+  var hibernateCfg = new AnnotationConfiguration()
+                      .setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect")
+                      .setProperty("hibernate.connection.url", "jdbc:h2:mem:")
+                      .setProperty("hibernate.hbm2ddl.auto", "create")
+                      .setProperty("hibernate.current_session_context_class", "thread")
+
+  ForumMeta.entityClasses.foreach{ cls => hibernateCfg.addAnnotatedClass(cls) }
+
+  var sessionFactory = hibernateCfg.buildSessionFactory
 
   def init() = {
     var session = sessionFactory.getCurrentSession

@@ -8,7 +8,7 @@
 
 <ul>
 <#list it as forum>
-<li>${forum.name?html}</li>
+<li><a href="forum/${forum.id}">${forum.name?html}</a></li>
 </#list>
 </ul>
 

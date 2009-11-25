@@ -5,7 +5,6 @@ import org.mortbay.jetty.servlet.{Context => JettyContext, ServletHolder}
 import com.sun.jersey.api.core.ClassNamesResourceConfig
 import com.sun.jersey.spi.container.servlet.ServletContainer
 import org.mortbay.jetty.{Server => JettyServer}
-import javax.ws.rs.{Path, GET}
 import java.util.{Map, HashMap}
 import java.io.{File, OutputStream, IOException, OutputStreamWriter}
 import com.sun.jersey.spi.template.TemplateProcessor
@@ -20,15 +19,6 @@ import com.sun.jersey.api.view.Viewable
 import scala.collection.{ mutable }
 import org.scala_tools.javautils.Imports._
 
-
-@Path("/")
-class TestResource {
-  @GET
-  def handleIndex:Viewable = {
-    new Viewable("/index.ftl", Database.listForums)
-  }
-}
-
 object Server {
   def main(args:Array[String]) = {
     Database.init
@@ -37,8 +27,9 @@ object Server {
     sh.setInitParameter(ServletContainer.RESOURCE_CONFIG_CLASS,
                         classOf[ClassNamesResourceConfig].getName)
 
-    var classNames = List[String](classOf[TestResource].getName,
-                                  classOf[FreemarkerTemplateProvider].getName)
+    var classNames = List[String](
+       classOf[ForumIndex].getName, classOf[Forum].getName, classOf[Thread].getName,
+       classOf[FreemarkerTemplateProvider].getName)
     sh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES,
                         classNames.reduceLeft {(a,b) => a + ";" + b} )
 

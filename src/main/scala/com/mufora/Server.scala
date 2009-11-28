@@ -29,7 +29,6 @@ object Server {
 
     var classNames = new StringBuilder(classOf[FreemarkerTemplateProvider].getName)
     ForumMeta.resourceClasses.foreach{ cls => classNames.append(";" + cls.getName) }
-    println("classNames = " + classNames)
     sh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames.toString )
 
     var port = 8080

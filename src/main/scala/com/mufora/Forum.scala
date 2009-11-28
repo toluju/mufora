@@ -5,6 +5,7 @@ import java.io.Serializable
 import javax.ws.rs.{Path, GET, PathParam}
 import com.sun.jersey.api.view.Viewable
 import java.util.{List => JList, ArrayList}
+import scala.reflect.BeanProperty
 
 // this is a little ugly but still better than spreading this out over multiple files
 object ForumMeta {
@@ -23,25 +24,18 @@ class ForumIndex {
 
 @Entity
 class Forum extends Serializable {
-  @Id @GeneratedValue
-  var theid:int = _
-  var thename:String = _
+  @Id @GeneratedValue @BeanProperty
+  var id:int = _
+  @BeanProperty
+  var name:String = _
 
   // unfortunately this needs to be of type java.util.List for hibernate to work
-  @OneToMany{ val mappedBy = "theforum" }
-  var thethreads:JList[Thread] = new ArrayList[Thread]
-
-  def id:int = theid
-  def id_=(n:int) = theid = n
-
-  def name:String = thename
-  def name_=(str:String) = thename = str
-
-  def threads:JList[Thread] = thethreads
+  @OneToMany{ val mappedBy = "forum" } @BeanProperty
+  var threads:JList[Thread] = new ArrayList[Thread]
 
   def +(thread:Thread) = {
     thread.forum = this
-    thethreads.add(thread)
+    threads.add(thread)
   }
 
   @GET
@@ -53,28 +47,18 @@ class Forum extends Serializable {
 
 @Entity
 class Thread extends Serializable {
-  @Id @GeneratedValue
-  var theid:int = _
-  var thename:String = _
-  @ManyToOne
-  var theforum:Forum = _
-  @OneToMany{ val mappedBy = "thethread" }
-  var theposts:JList[Post] = new ArrayList[Post]
-
-  def id:int = theid
-  def id_=(n:int) = theid = n
-
-  def name:String = thename
-  def name_=(str:String) = thename = str
-
-  def forum:Forum = theforum
-  def forum_=(f:Forum) = theforum = f
-
-  def posts:JList[Post] = theposts
+  @Id @GeneratedValue @BeanProperty
+  var id:int = _
+  @BeanProperty
+  var name:String = _
+  @ManyToOne @BeanProperty
+  var forum:Forum = _
+  @OneToMany{ val mappedBy = "thread" } @BeanProperty
+  var posts:JList[Post] = new ArrayList[Post]
 
   def +(post:Post) = {
     post.thread = this
-    theposts.add(post)
+    posts.add(post)
   }
 
   @GET
@@ -83,18 +67,10 @@ class Thread extends Serializable {
 
 @Entity
 class Post extends Serializable {
-  @Id @GeneratedValue
-  var theid:int = _
-  var thecontent:String = _
-  @ManyToOne
-  var thethread:Thread = _
-
-  def id:int = theid
-  def id_=(n:int) = theid = n
-
-  def content:String = thecontent
-  def content_=(str:String) = thecontent = str
-
-  def thread:Thread = thethread
-  def thread_=(t:Thread) = thethread = t
+  @Id @GeneratedValue @BeanProperty
+  var id:int = _
+  @BeanProperty
+  var content:String = _
+  @ManyToOne @BeanProperty
+  var thread:Thread = _
 }

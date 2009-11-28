@@ -1,10 +1,10 @@
 package com.mufora
 
 import java.net.InetAddress
-import org.mortbay.jetty.servlet.{Context => JettyContext, ServletHolder}
+import org.mortbay.jetty.servlet.{Context => JettyContext, FilterHolder, ServletHolder, DefaultServlet}
 import com.sun.jersey.api.core.ClassNamesResourceConfig
 import com.sun.jersey.spi.container.servlet.ServletContainer
-import org.mortbay.jetty.{Server => JettyServer}
+import org.mortbay.jetty.{Server => JettyServer, Handler}
 import java.util.{Map, HashMap}
 import java.io.{File, OutputStream, IOException, OutputStreamWriter}
 import com.sun.jersey.spi.template.TemplateProcessor
@@ -23,22 +23,40 @@ object Server {
   def main(args:Array[String]) = {
     Database.init
 
-    var sh = new ServletHolder(classOf[ServletContainer])
-    sh.setInitParameter(ServletContainer.RESOURCE_CONFIG_CLASS,
+    var fh = new FilterHolder(classOf[StaticContentFilter])
+    fh.setInitParameter(ServletContainer.RESOURCE_CONFIG_CLASS,
                         classOf[ClassNamesResourceConfig].getName)
 
     var classNames = new StringBuilder(classOf[FreemarkerTemplateProvider].getName)
     ForumMeta.resourceClasses.foreach{ cls => classNames.append(";" + cls.getName) }
-    sh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames.toString )
+    fh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames.toString)
+
+    var sh = new ServletHolder(classOf[DefaultServlet])
+    sh.setInitParameter("org.mortbay.jetty.servlet.Default.dirAllowed", "true")
 
     var port = 8080
     var jettyServer = new JettyServer(port)
     var context = new JettyContext(jettyServer, "/", true, false)
     context.addServlet(sh, "/*")
+    context.addFilter(fh, "/*", Handler.REQUEST)
+    context.setResourceBase("src/main/webapp")
     jettyServer.start();
 
     var host = InetAddress.getLocalHost.getHostName
     println("Server started on http://" + host + ":" + port)
+  }
+}
+
+class StaticContentFilter extends ServletContainer {
+  override def doFilter(request:javax.servlet.http.HttpServletRequest, response:javax.servlet.http.HttpServletResponse, chain:javax.servlet.FilterChain) = {
+    var path = request.getPathInfo
+
+    if (path.startsWith("/img/") || path.startsWith("/js/") || path.startsWith("/css/")) {
+      chain.doFilter(request, response)
+    }
+    else {
+      super.doFilter(request, response, chain)
+    }
   }
 }
 

@@ -28,9 +28,9 @@ object Server {
     fh.setInitParameter(ServletContainer.RESOURCE_CONFIG_CLASS,
                         classOf[ClassNamesResourceConfig].getName)
 
-    var classNames = new StringBuilder(classOf[FreemarkerTemplateProvider].getName)
-    ForumMeta.resourceClasses.foreach{ cls => classNames.append(";" + cls.getName) }
-    fh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, classNames.toString)
+    fh.setInitParameter(ClassNamesResourceConfig.PROPERTY_CLASSNAMES, 
+                        classOf[FreemarkerTemplateProvider].getName + ";" +
+                        ForumMeta.resourceClasses.map{ cls => cls.getName }.mkString(";"))
 
     var sh = new ServletHolder(classOf[DefaultServlet])
     sh.setInitParameter("org.mortbay.jetty.servlet.Default.dirAllowed", "true")

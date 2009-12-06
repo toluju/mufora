@@ -1,6 +1,7 @@
 package com.mufora
 
 import org.hibernate.cfg.AnnotationConfiguration
+import org.hibernate.{Session, Transaction}
 import java.util.{List => JavaList}
 
 object Database {
@@ -9,6 +10,7 @@ object Database {
                       .setProperty("hibernate.connection.url", "jdbc:h2:mem:")
                       .setProperty("hibernate.hbm2ddl.auto", "create")
                       .setProperty("hibernate.current_session_context_class", "thread")
+  //                    .setProperty("hibernate.show_sql", "true")
 
   ForumMeta.entityClasses.foreach{ cls => hibernateCfg.addAnnotatedClass(cls) }
 
@@ -64,74 +66,39 @@ object Database {
     tx.commit
   }
 
-  def listForums():JavaList[Forum] = {
-    var session = sessionFactory.getCurrentSession
-    var tx = session.beginTransaction
+  def select[T](func: Session => T):T = {
+    var session:Session = null
+    var tx:Transaction = null
+    var result:T = null.asInstanceOf[T] // <neo>whoa</neo>
 
-    var list = session.createQuery("from Forum").list.asInstanceOf[JavaList[Forum]]
+    try {
+      session = sessionFactory.getCurrentSession
+      tx = session.beginTransaction
+      result = func(session)
+      tx.commit
+    }
+    catch {
+      case e: Exception => {
+        println("Error: " + e.getMessage + " [" + e.getClass.getName + "]")
+        if (tx != null) tx.rollback
+      }
+    }
 
-    tx.commit
-    return list
+    result
   }
 
-  def getForum(id:int):Forum = {
-    var session = sessionFactory.getCurrentSession
-    var tx = session.beginTransaction
+  def update[T](func: Session => _) = {
+    var session:Session = null
+    var tx:Transaction = null
 
-    var forum = session.createQuery("from Forum where id = :id").setInteger("id", id)
-                       .uniqueResult.asInstanceOf[Forum]
-
-    forum.threads.size // load threads for this forum
-
-    tx.commit
-    return forum
-  }
-
-  def newForum(name:String) = {
-    var session = sessionFactory.getCurrentSession
-    var tx = session.beginTransaction
-
-    var forum = new Forum
-    forum.name = name
-    session.save(forum)
-
-    tx.commit
-  }
-
-  def getThread(id:int):Thread = {
-    var session = sessionFactory.getCurrentSession
-    var tx = session.beginTransaction
-
-    var thread = session.createQuery("from Thread where id = :id").setInteger("id", id)
-                        .uniqueResult.asInstanceOf[Thread]
-
-    thread.posts.size // load posts for this thread
-
-    tx.commit
-    return thread
-  }
-
-  def newThread(name:String, forum:Forum) = {
-    var session = sessionFactory.getCurrentSession
-    var tx = session.beginTransaction
-
-    var thread = new Thread
-    thread.name = name
-    thread.forum = forum
-    session.save(thread)
-
-    tx.commit
-  }
-
-  def newPost(content:String, thread:Thread) = {
-    var session = sessionFactory.getCurrentSession
-    var tx = session.beginTransaction
-
-    var post = new Post
-    post.content = content
-    post.thread = thread
-    session.save(post)
-
-    tx.commit
+    try {
+      session = sessionFactory.getCurrentSession
+      tx = session.beginTransaction
+      func(session)
+      tx.commit
+    }
+    catch {
+      case e: Exception => if (tx != null) tx.rollback
+    }
   }
 }

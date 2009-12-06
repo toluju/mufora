@@ -12,5 +12,8 @@
 </#list>
 </ul>
 
+<a href="forum/new">New Forum</a>
+
+
 </body>
 </html>

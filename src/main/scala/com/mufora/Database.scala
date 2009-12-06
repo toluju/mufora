@@ -87,6 +87,17 @@ object Database {
     return forum
   }
 
+  def newForum(name:String) = {
+    var session = sessionFactory.getCurrentSession
+    var tx = session.beginTransaction
+
+    var forum = new Forum
+    forum.name = name
+    session.save(forum)
+
+    tx.commit
+  }
+
   def getThread(id:int):Thread = {
     var session = sessionFactory.getCurrentSession
     var tx = session.beginTransaction
@@ -98,5 +109,29 @@ object Database {
 
     tx.commit
     return thread
+  }
+
+  def newThread(name:String, forum:Forum) = {
+    var session = sessionFactory.getCurrentSession
+    var tx = session.beginTransaction
+
+    var thread = new Thread
+    thread.name = name
+    thread.forum = forum
+    session.save(thread)
+
+    tx.commit
+  }
+
+  def newPost(content:String, thread:Thread) = {
+    var session = sessionFactory.getCurrentSession
+    var tx = session.beginTransaction
+
+    var post = new Post
+    post.content = content
+    post.thread = thread
+    session.save(post)
+
+    tx.commit
   }
 }

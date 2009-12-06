@@ -13,10 +13,11 @@ import freemarker.template.{Configuration, Template, ObjectWrapper, SimpleObject
                             TemplateHashModel, TemplateModel, TemplateException,
                             TemplateModelException}
 import javax.ws.rs.ext.Provider
-import javax.servlet.ServletContext
+import javax.servlet.{ServletContext, FilterChain}
 import javax.ws.rs.core.Context
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import com.sun.jersey.api.view.Viewable
-import scala.collection.{ mutable }
+import scala.collection.mutable
 import org.scala_tools.javautils.Imports._
 
 object Server {
@@ -48,7 +49,7 @@ object Server {
 }
 
 class StaticContentFilter extends ServletContainer {
-  override def doFilter(request:javax.servlet.http.HttpServletRequest, response:javax.servlet.http.HttpServletResponse, chain:javax.servlet.FilterChain) = {
+  override def doFilter(request:HttpServletRequest, response:HttpServletResponse, chain:javax.servlet.FilterChain) = {
     var path = request.getPathInfo
 
     if (path.startsWith("/img/") || path.startsWith("/js/") || path.startsWith("/css/")) {

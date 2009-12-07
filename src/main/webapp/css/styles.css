@@ -1,0 +1,15 @@
+* {
+  font-family: helvetica, sans-serif;
+}
+
+li {
+  list-style: none;
+  border-top: solid 1px #000;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+ul {
+  padding-left: 0;
+  border-bottom: solid 1px #000;
+}
